@@ -8,10 +8,11 @@ replicaCount: 1
 # that repository instead. See:
 # https://circleci.com/docs/2.0/runner-installation/?section=executors-and-images#create-a-dockerfile-that-extends-the-circleci-runner-image
 image:
-  repository: circleci/runner
+  # sunggun/cci-private-runner is from circleci/runner:launch-agent with pre-installed docker cli and some other tools for checking.
+  repository: sunggun/cci-private-runner
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "launch-agent"
+  tag: "dind"
 
 # Refers to the resource class you created for your runner. See:
 # https://circleci.com/docs/2.0/runner-installation/?section=executors-and-images#authentication
@@ -50,3 +51,24 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# dindSidecar: {}
+
+dindSidecar:
+  image:
+    repository: docker
+    tag: 19-dind
+    pullPolicy: IfNotPresent
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  volumes:
+    - name: dind-storage
+      emptyDir: {}
+  volumeMounts:
+    - name: dind-storage
+      mountPath: /var/lib/docker

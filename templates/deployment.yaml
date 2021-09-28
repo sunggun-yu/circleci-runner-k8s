@@ -46,7 +46,10 @@ spec:
             {{- if .Values.agentVersion }}
             - name: "agent_version"
               value: "{{ .Values.agentVersion }}"
-
+            {{- end }}
+            {{- if .Values.dindSidecar }}
+            - name: DOCKER_HOST
+              value: tcp://localhost:2375
             {{- end }}
           livenessProbe:
             exec:
@@ -58,6 +61,20 @@ spec:
             periodSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+        {{- if .Values.dindSidecar }}
+        - name: dind-daemon 
+          image: "{{ .Values.dindSidecar.image.repository }}:{{ .Values.dindSidecar.image.tag }}"
+          imagePullPolicy: {{ .Values.dindSidecar.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            privileged: true
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: ""
+          volumeMounts:
+            {{- .Values.dindSidecar.volumeMounts | toYaml | trim | nindent 12 }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -70,3 +87,5 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes: 
+      {{- .Values.dindSidecar.volumes | toYaml | trim | nindent 8 }}
